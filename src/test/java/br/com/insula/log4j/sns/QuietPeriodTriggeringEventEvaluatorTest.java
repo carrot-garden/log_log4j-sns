@@ -34,16 +34,26 @@ public class QuietPeriodTriggeringEventEvaluatorTest {
 
 	@Test
 	public void testIsTriggeringEvent() throws InterruptedException {
-		TriggeringEventEvaluator evaluator = new QuietPeriodTriggeringEventEvaluator(1, TimeUnit.SECONDS);
-		Logger logger = Logger.getLogger(QuietPeriodTriggeringEventEvaluatorTest.class);
-		LoggingEvent event = new LoggingEvent("", logger, Level.WARN, SAMPLE_LOGGING_MESSAGE, new Exception());
+
+		final TriggeringEventEvaluator evaluator = new QuietPeriodTriggeringEventEvaluator(
+				1, TimeUnit.SECONDS);
+
+		final Logger logger = Logger
+				.getLogger(QuietPeriodTriggeringEventEvaluatorTest.class);
+
+		final LoggingEvent event = new LoggingEvent("", logger, Level.WARN,
+				SAMPLE_LOGGING_MESSAGE, new Exception());
+
 		assertTrue(evaluator.isTriggeringEvent(event));
 		assertFalse(evaluator.isTriggeringEvent(event));
 		assertFalse(evaluator.isTriggeringEvent(event));
+
 		Thread.sleep(2000);
+
 		assertTrue(evaluator.isTriggeringEvent(event));
 		assertFalse(evaluator.isTriggeringEvent(event));
 		assertFalse(evaluator.isTriggeringEvent(event));
+
 	}
 
 }

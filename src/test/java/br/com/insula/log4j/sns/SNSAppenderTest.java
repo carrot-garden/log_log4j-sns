@@ -18,13 +18,9 @@
  */
 package br.com.insula.log4j.sns;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -46,31 +42,44 @@ public class SNSAppenderTest {
 
 	@Test
 	public void testAppendLoggingEvent() {
-		AmazonSNSAsync amazonSNSAsync = mock(AmazonSNSAsync.class);
-		when(amazonSNSAsync.createTopic(any(CreateTopicRequest.class))).thenReturn(
-				new CreateTopicResult().withTopicArn("arn:topic:test"));
-		ArgumentCaptor<PublishRequest> publishRequestCaptor = ArgumentCaptor.forClass(PublishRequest.class);
-		when(amazonSNSAsync.publishAsync(publishRequestCaptor.capture())).thenReturn(null);
 
-		SNSAppender appender = new SNSAppender(amazonSNSAsync);
+		final AmazonSNSAsync amazonSNSAsync = mock(AmazonSNSAsync.class);
+
+		when(amazonSNSAsync.createTopic(any(CreateTopicRequest.class)))
+				.thenReturn(
+						new CreateTopicResult().withTopicArn("arn:topic:test"));
+
+		final ArgumentCaptor<PublishRequest> publishRequestCaptor = ArgumentCaptor
+				.forClass(PublishRequest.class);
+
+		when(amazonSNSAsync.publishAsync(publishRequestCaptor.capture()))
+				.thenReturn(null);
+
+		final SNSAppender appender = new SNSAppender(amazonSNSAsync);
 		appender.setTopic("test");
 		appender.setSubject(SUBJECT);
 		appender.setLayout(new PatternLayout("%d [%t] %-5p %c - %m%n"));
 		appender.activateOptions();
 
-		Logger logger = Logger.getLogger(SNSAppenderTest.class);
-		LoggingEvent event = new LoggingEvent("", logger, Level.WARN, SAMPLE_LOGGING_MESSAGE, new Exception());
+		final Logger logger = Logger.getLogger(SNSAppenderTest.class);
+		final LoggingEvent event = new LoggingEvent("", logger, Level.WARN,
+				SAMPLE_LOGGING_MESSAGE, new Exception());
+
 		appender.append(event);
 		appender.append(event);
 		appender.append(event);
 		appender.append(event);
 		appender.append(event);
 
-		PublishRequest publishRequest = publishRequestCaptor.getValue();
+		final PublishRequest publishRequest = publishRequestCaptor.getValue();
+
 		assertEquals(SUBJECT, publishRequest.getSubject());
 		assertTrue(publishRequest.getMessage().contains(SAMPLE_LOGGING_MESSAGE));
 		assertTrue(publishRequest.getMessage().contains("java.lang.Exception"));
-		verify(amazonSNSAsync, times(1)).publishAsync(any(PublishRequest.class));
+
+		verify(amazonSNSAsync, times(1))
+				.publishAsync(any(PublishRequest.class));
+
 	}
 
 }

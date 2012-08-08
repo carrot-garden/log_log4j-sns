@@ -28,31 +28,45 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 
-public class QuietPeriodTriggeringEventEvaluator implements TriggeringEventEvaluator {
+public class QuietPeriodTriggeringEventEvaluator implements
+		TriggeringEventEvaluator {
 
 	private static final int DEFAULT_QUIET_PERIOD = 15;
 
 	private final Cache<List<String>, Boolean> lastThrowables;
 
-	public QuietPeriodTriggeringEventEvaluator(int quietPeriod, TimeUnit timeUnit) {
-		this.lastThrowables = CacheBuilder.newBuilder().expireAfterWrite(quietPeriod, timeUnit).build();
+	public QuietPeriodTriggeringEventEvaluator(final int quietPeriod,
+			final TimeUnit timeUnit) {
+
+		this.lastThrowables = CacheBuilder.newBuilder()
+				.expireAfterWrite(quietPeriod, timeUnit).build();
+
 	}
 
 	public QuietPeriodTriggeringEventEvaluator() {
+
 		this(DEFAULT_QUIET_PERIOD, TimeUnit.MINUTES);
+
 	}
 
 	@Override
-	public boolean isTriggeringEvent(LoggingEvent event) {
-		String[] throwableStrRep = event.getThrowableStrRep();
+	public boolean isTriggeringEvent(final LoggingEvent event) {
+
+		final String[] throwableStrRep = event.getThrowableStrRep();
+
 		if (throwableStrRep != null) {
-			final ImmutableList<String> throwableStrList = ImmutableList.copyOf(throwableStrRep);
+
+			final ImmutableList<String> throwableStrList = ImmutableList
+					.copyOf(throwableStrRep);
+
 			if (lastThrowables.getIfPresent(throwableStrList) == null) {
 				lastThrowables.put(throwableStrList, true);
 				return true;
 			}
 		}
+
 		return false;
+
 	}
 
 }

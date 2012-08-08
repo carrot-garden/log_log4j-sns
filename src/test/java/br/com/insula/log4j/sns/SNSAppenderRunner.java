@@ -23,14 +23,19 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class SNSAppenderRunner {
 
-	public static void main(String[] args) throws InterruptedException {
-		PropertyConfigurator.configure(SNSAppenderRunner.class.getResource("/test-log4j.properties"));
+	public static void main(final String[] args) throws InterruptedException {
 
-		Logger logger = Logger.getLogger(SNSAppenderRunner.class);
+		PropertyConfigurator.configure(SNSAppenderRunner.class
+				.getResource("/test-log4j.properties"));
+
+		final Logger logger = Logger.getLogger(SNSAppenderRunner.class);
+
 		for (int i = 0; i < 5; i++) {
 			logger.warn("Warning Message", new Exception());
 		}
+
 		Thread.sleep(5000);
+
 	}
 
 }

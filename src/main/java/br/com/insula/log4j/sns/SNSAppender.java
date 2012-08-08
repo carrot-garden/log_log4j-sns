@@ -52,39 +52,57 @@ public class SNSAppender extends AppenderSkeleton {
 	public SNSAppender() {
 	}
 
-	public SNSAppender(AmazonSNSAsync amazonSNSAsync) {
+	public SNSAppender(final AmazonSNSAsync amazonSNSAsync) {
 		this.amazonSNSAsync = amazonSNSAsync;
 	}
 
 	@Override
 	public void activateOptions() {
+
 		createEvaluatorIfNeeded();
+
 		createAmazonSNSAsyncIfNeeded();
+
 		createTopicArn();
+
 	}
 
 	public boolean checkEntryConditions() {
+
 		if (this.amazonSNSAsync == null) {
-			errorHandler.error(String.format("AmazonSNSAsync object not configured for appender [%s].", name));
+			errorHandler.error(String.format(
+					"AmazonSNSAsync object not configured for appender [%s].",
+					name));
 			return false;
 		}
+
 		if (this.evaluator == null) {
-			errorHandler.error(String.format("No TriggeringEventEvaluator is set for appender [%s].", name));
+			errorHandler.error(String.format(
+					"No TriggeringEventEvaluator is set for appender [%s].",
+					name));
 			return false;
 		}
+
 		if (this.layout == null) {
-			errorHandler.error(String.format("No layout set for appender named [%s].", name));
+			errorHandler.error(String.format(
+					"No layout set for appender named [%s].", name));
 			return false;
 		}
+
 		if (this.topic == null) {
-			errorHandler.error(String.format("No topic set for appender named [%s].", name));
+			errorHandler.error(String.format(
+					"No topic set for appender named [%s].", name));
 			return false;
 		}
+
 		if (this.subject == null) {
-			errorHandler.error(String.format("No subject set for appender named [%s].", name));
+			errorHandler.error(String.format(
+					"No subject set for appender named [%s].", name));
 			return false;
 		}
+
 		return true;
+
 	}
 
 	@Override
@@ -97,7 +115,7 @@ public class SNSAppender extends AppenderSkeleton {
 	}
 
 	@Override
-	protected void append(LoggingEvent event) {
+	protected void append(final LoggingEvent event) {
 		if (!checkEntryConditions()) {
 			return;
 		}
@@ -114,87 +132,100 @@ public class SNSAppender extends AppenderSkeleton {
 
 	private void createAmazonSNSAsyncIfNeeded() {
 		if (this.amazonSNSAsync == null) {
-			this.amazonSNSAsync = new AmazonSNSAsyncClient(new BasicAWSCredentials(accessKey, secretKey));
+			this.amazonSNSAsync = new AmazonSNSAsyncClient(
+					new BasicAWSCredentials(accessKey, secretKey));
 		}
 	}
 
 	private void createTopicArn() {
-		this.topicArn = amazonSNSAsync.createTopic(new CreateTopicRequest(topic)).getTopicArn();
+		this.topicArn = amazonSNSAsync.createTopic(
+				new CreateTopicRequest(topic)).getTopicArn();
 	}
 
-	private String createMessage(LoggingEvent event) {
-		StringBuilder sb = new StringBuilder();
+	private String createMessage(final LoggingEvent event) {
+
+		final StringBuilder sb = new StringBuilder();
+
 		appendMessageHeader(sb);
 		appendMessageEvent(sb, event);
 		appendThrowableMessageBody(sb, event);
 		appendMessageFooter(sb);
+
 		return cutMessageTextIfExceedsMaximum(sb);
+
 	}
 
-	private void appendMessageHeader(StringBuilder sb) {
-		String header = layout.getHeader();
+	private void appendMessageHeader(final StringBuilder sb) {
+		final String header = layout.getHeader();
 		if (header != null) {
 			sb.append(header);
 		}
 	}
 
-	private void appendMessageEvent(StringBuilder sb, LoggingEvent event) {
+	private void appendMessageEvent(final StringBuilder sb,
+			final LoggingEvent event) {
+
 		sb.append(layout.format(event));
+
 	}
 
-	private void appendThrowableMessageBody(StringBuilder sb, LoggingEvent event) {
+	private void appendThrowableMessageBody(final StringBuilder sb,
+			final LoggingEvent event) {
+
 		if (layout.ignoresThrowable()) {
-			String[] throwableStrRep = event.getThrowableStrRep();
+			final String[] throwableStrRep = event.getThrowableStrRep();
 			if (throwableStrRep != null) {
-				for (String line : throwableStrRep) {
+				for (final String line : throwableStrRep) {
 					sb.append(line);
 					sb.append(Layout.LINE_SEP);
 				}
 			}
 		}
+
 	}
 
-	private void appendMessageFooter(StringBuilder sb) {
-		String footer = layout.getFooter();
+	private void appendMessageFooter(final StringBuilder sb) {
+		final String footer = layout.getFooter();
 		if (footer != null) {
 			sb.append(footer);
 		}
 	}
 
-	private String cutMessageTextIfExceedsMaximum(StringBuilder sb) {
+	private String cutMessageTextIfExceedsMaximum(final StringBuilder sb) {
 		if (sb.length() > SNS_MAXIMUM_MESSAGE_SIZE) {
 			return sb.substring(0, SNS_MAXIMUM_MESSAGE_SIZE);
 		}
 		return sb.toString();
 	}
 
-	private void publishMessage(String message) {
+	private void publishMessage(final String message) {
 		try {
-			amazonSNSAsync.publishAsync(new PublishRequest(topicArn, message, subject));
-		}
-		catch (AmazonClientException ex) {
+			amazonSNSAsync.publishAsync(new PublishRequest(topicArn, message,
+					subject));
+		} catch (final AmazonClientException ex) {
 			errorHandler.error("Unable to publish log message to SNS.");
 		}
 	}
 
-	public void setEvaluatorClass(String value) {
-		this.evaluator = (TriggeringEventEvaluator) OptionConverter.instantiateByClassName(value,
-				TriggeringEventEvaluator.class, evaluator);
+	public void setEvaluatorClass(final String value) {
+		this.evaluator = (TriggeringEventEvaluator) OptionConverter
+				.instantiateByClassName(value, TriggeringEventEvaluator.class,
+						evaluator);
 	}
 
-	public void setAccessKey(String accessKey) {
+	public void setAccessKey(final String accessKey) {
 		this.accessKey = accessKey;
 	}
 
-	public void setSecretKey(String secretKey) {
+	public void setSecretKey(final String secretKey) {
 		this.secretKey = secretKey;
 	}
 
-	public void setTopic(String topic) {
+	public void setTopic(final String topic) {
 		this.topic = topic;
 	}
 
-	public void setSubject(String subject) {
+	public void setSubject(final String subject) {
 		this.subject = subject;
 	}
 
